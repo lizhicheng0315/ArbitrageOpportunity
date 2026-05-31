@@ -1,91 +1,145 @@
-# LOF溢价率交易系统 - 项目结构
+# LOF 溢价率套利交易系统
 
-## 📁 目录结构
+基于集思录数据的 LOF（上市型开放式基金）溢价率监控与套利分析仪表板。
 
-```
-get_jisilu/
-├── 📂 core/                    # 核心模块
-│   ├── __init__.py
-│   ├── data_sync.py           # 智能数据同步
-│   ├── premium_analyzer.py    # 溢价率分析器
-│   └── trading_signals.py     # 交易信号生成
-├── 📂 utils/                   # 工具模块
-│   ├── __init__.py
-│   ├── data_manager.py        # 数据管理工具
-│   ├── api_client.py          # API客户端
-│   └── file_handler.py        # 文件处理工具
-├── 📂 tests/                   # 测试模块
-│   ├── __init__.py
-│   ├── test_data_sync.py      # 数据同步测试
-│   ├── test_trading.py        # 交易逻辑测试
-│   └── test_utils.py          # 工具函数测试
-├── 📂 data/                    # 数据目录
-│   ├── lof_*.csv             # LOF历史数据
-│   └── sync_state.json       # 同步状态
-├── 📂 configs/                 # 配置文件
-│   └── config.py              # 全局配置
-├── 📂 scripts/                 # 脚本工具
-│   ├── quick_start.sh         # 快速启动
-│   ├── sync_daily.py          # 每日同步
-│   └── dashboard.py           # Web仪表板
-└── 📂 docs/                    # 文档
-    ├── README.md
-    └── API.md
+## 功能特性
+
+- **溢价率监控**：实时展示 LOF 基金的溢价率、净值、收盘价
+- **交易信号**：基于 7 日溢价率均值 ± 标准差生成 BUY / SELL / HOLD 信号
+- **套利分析**：自动计算溢价套利 / 折价套利的利润，扣除申购费、赎回费等成本
+- **申购状态**：显示每只 LOF 的申购 / 赎回状态、最小申购金额、费率
+- **可操作筛选**：一键过滤掉不可操作的套利机会（暂停申购 / 赎回的基金）
+- **趋势图表**：带布林带的溢价率趋势图，交互式 Plotly 图表
+
+## 快速开始
+
+### 1. 安装依赖
+
+```bash
+pip install -r requirements.txt
 ```
 
-## 🎯 核心文件说明
+### 2. 初始化数据
 
-### 核心模块 (core/)
-- **data_sync.py**: 智能增量数据同步，处理API滚动窗口
-- **premium_analyzer.py**: 溢价率统计分析和信号生成
-- **trading_signals.py**: 基于历史数据的交易信号逻辑
+首次运行需要从集思录同步历史数据：
 
-### 工具模块 (utils/)
-- **data_manager.py**: 数据加载、保存、验证
-- **api_client.py**: 集思录API交互封装
-- **file_handler.py**: 文件IO和路径管理
-
-### 用户接口
-- **scripts/sync_daily.py**: 每日数据同步脚本
-- **scripts/dashboard.py**: Streamlit Web仪表板
-- **scripts/quick_start.sh**: 快速启动和检查
-
-### 测试文件
-- **tests/test_data_sync.py**: 数据同步逻辑测试
-- **tests/test_trading.py**: 交易信号准确性测试
-
-## 🚀 使用流程
-
-1. **首次运行**:
-   ```bash
-   python scripts/sync_daily.py --init
-   python scripts/dashboard.py
-   ```
-
-2. **日常更新**:
-   ```bash
-   python scripts/sync_daily.py
-   ```
-
-3. **测试验证**:
-   ```bash
-   python -m pytest tests/
-   ```
-
-## 📊 数据结构
-
-### LOF数据文件格式
-```csv
-fund_id,price_dt,price,net_value_dt,net_value,discount_rt,amount,...
-160140,2025-07-23,1.284,2025-07-22,1.2963,-0.89,11077,...
+```bash
+python scripts/sync_daily.py --init
 ```
 
-### 同步状态
-```json
-{
-  "last_full_sync": "2025-07-23T10:00:00",
-  "last_incremental_sync": "2025-07-23T10:00:00",
-  "total_records": 1872,
-  "codes_updated": 36
-}
+### 3. 启动仪表板
+
+```bash
+streamlit run scripts/dashboard.py
 ```
+
+浏览器访问 http://localhost:8501
+
+### 4. 日常更新
+
+```bash
+python scripts/sync_daily.py
+```
+
+## 项目结构
+
+```
+ArbitrageOpportunity/
+├── 📂 scripts/                  # 用户接口
+│   ├── dashboard.py             # Streamlit 仪表板（主入口）
+│   └── sync_daily.py            # 每日数据同步脚本
+├── 📂 core/                     # 核心模块
+│   └── data_sync.py             # 集思录 API 数据同步
+├── 📂 utils/                    # 工具模块
+│   └── data_manager.py          # 数据加载、保存、验证
+├── 📂 tests/                    # 测试
+│   ├── test_scripts.py          # 仪表板 helper 测试
+│   ├── test_data_sync.py        # 数据同步测试
+│   └── test_data_manager.py     # 数据管理测试
+├── 📂 data/                     # 数据目录（自动生成）
+│   ├── lof_*.csv                # LOF 历史数据
+│   └── lof_names.json           # 基金名称缓存
+├── 📂 legacy/                   # 历史代码（不再使用）
+├── 📂 debug/                    # 调试脚本
+├── 📂 docs/                     # 文档
+│   └── superpowers/             # 设计规格与实施计划
+├── all_LOF.txt                  # LOF 代码列表
+├── requirements.txt             # Python 依赖
+└── README.md
+```
+
+## 仪表板功能
+
+### 顶部概览
+
+| 指标 | 说明 |
+|------|------|
+| 监控 LOF | 当前选中的 LOF 数量 |
+| 买入信号 | 触发 BUY 信号的基金数 |
+| 可套利 | 溢价 / 折价超过成本的基金数 |
+| 最大溢价 / 最大折价 | 当前最大溢价率和折价率 |
+
+### 套利机会区域
+
+展示利润为正的套利机会，每张卡片包含：
+
+- 溢价率、成本、预计利润、规模
+- 操作状态：`可操作` / `理论有利润，当前不可操作` / `申赎状态未知`
+- 侧边栏可开启「仅显示可操作套利」筛选
+
+### 排序列表
+
+全宽表格展示所有 LOF，按溢价率降序排列：
+
+- 代码、名称、溢价率、套利方向、成本、套利利润
+- 申购状态、最小申购、申购费、赎回状态、赎回费
+- 收盘价、净值、规模、7 日均值、信号
+- 溢价率正红负绿，申购 / 赎回状态颜色标识
+
+### 趋势图
+
+- 溢价率折线 + 7 日均线
+- 布林带（±1σ）浅色填充
+- 当前点红色高亮标记
+
+## 套利逻辑
+
+### 溢价套利（溢价率 > 申购 + 卖出成本）
+
+1. 场内申购 LOF（按净值买入）
+2. T+2 后在场内卖出（按市价卖出）
+3. 利润 = 溢价率 - 申购费 - 卖出佣金
+
+### 折价套利（折价深度 > 买入 + 赎回成本）
+
+1. 场内买入 LOF（按市价买入）
+2. T+2 后场内赎回（按净值赎回）
+3. 利润 = 折价深度 - 买入佣金 - 赎回费
+
+### 默认费率（侧边栏可调）
+
+| 费用 | 默认值 |
+|------|--------|
+| 申购费 | 0.15%（券商一折） |
+| 卖出佣金 | 0.10% |
+| 赎回费 | 0.50% |
+| 买入佣金 | 0.10% |
+
+## 数据来源
+
+- **历史数据**：集思录 LOF 历史列表 API
+- **申购状态**：集思录 LOF 实时列表接口（stock_lof_list + index_lof_list）
+- **基金名称**：集思录 LOF 详情页 HTML 标题
+
+## 测试
+
+```bash
+pytest tests/ -v
+```
+
+## ⚠️ 风险提示
+
+- 历史数据不代表未来表现
+- T+2 操作存在价格波动风险
+- 溢价率可能在你操作完成前已收窄
+- 投资有风险，决策需谨慎
