@@ -60,22 +60,32 @@ def load_subscription_info():
         'X-Requested-With': 'XMLHttpRequest',
         'Referer': 'https://www.jisilu.cn/data/lof/',
     }
-    endpoints = [
+    # stock/index LOF 列表 + QDII 子分类（A/C/E 份额）
+    lof_endpoints = [
         'https://www.jisilu.cn/data/lof/stock_lof_list/',
         'https://www.jisilu.cn/data/lof/index_lof_list/',
     ]
+    qdii_endpoints = [
+        'https://www.jisilu.cn/data/qdii/qdii_list/A',
+        'https://www.jisilu.cn/data/qdii/qdii_list/E',
+    ]
 
     subscription_info = {}
-    for url in endpoints:
+    for url in lof_endpoints + qdii_endpoints:
         try:
-            response = requests.get(url, headers=headers, timeout=15)
+            req_headers = headers.copy()
+            req_params = {}
+            if 'qdii' in url:
+                req_headers['Referer'] = 'https://www.jisilu.cn/data/qdii/'
+                req_params = {'only_lof': 'y', 'rp': '50'}
+            response = requests.get(url, params=req_params, headers=req_headers, timeout=15)
             if response.status_code != 200:
                 continue
             data = response.json()
             for row in data.get('rows', []):
                 cell = row.get('cell', {})
                 code = str(cell.get('fund_id', '')).strip()
-                if not code:
+                if not code or code in subscription_info:
                     continue
                 subscription_info[code] = {
                     'apply_status': format_unknown(cell.get('apply_status')),
